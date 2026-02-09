@@ -60,6 +60,25 @@ class ViewController: UIViewController {
     }
     
     @objc private func handleTap() {
+        // 1. Check if purchased
+        if PurchaseStatusManager.shared.isPurchased() {
+             performTapAction()
+             return
+        }
+        
+        // 2. Check if trial is active
+        // If NOT expired, calculate remaining checks or allow? 
+        // Logic says: "If in trial period, can continue logic"
+        if !PurchaseStatusManager.shared.isTrialExpired() {
+            performTapAction()
+            return
+        }
+        
+        // 3. Not purchased and trial expired -> Show Purchase Alert
+        showPurchaseAlert()
+    }
+
+    private func performTapAction() {
         // Animation
         UIView.animate(withDuration: 0.1, animations: {
             self.fishImageView.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
@@ -106,6 +125,34 @@ class ViewController: UIViewController {
         }) { _ in
             label.removeFromSuperview()
         }
+    }
+    
+
+
+    private func showPurchaseAlert() {
+        let alert = UIAlertController(
+            title: "提示",
+            message: "免费使用一周，只需支付6元即可无限使用，感谢支持",
+            preferredStyle: .alert
+        )
+        
+        let purchaseAction = UIAlertAction(title: "立即购买", style: .default) { _ in
+            PurchaseManager.shared.requestPurchase { success in
+                if success {
+                    // Purchase successful, perform the tap action or just let them tap again
+                    DispatchQueue.main.async {
+                        self.performTapAction()
+                    }
+                }
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "取消", style: .cancel, handler: nil)
+        
+        alert.addAction(purchaseAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true, completion: nil)
     }
     
     @objc private func openSettings() {
