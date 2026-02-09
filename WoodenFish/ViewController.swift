@@ -6,6 +6,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     private let fishImageView = UIImageView()
     private let settingsButton = UIButton(type: .system)
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+    private var loadingIndicator: UIActivityIndicatorView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -138,8 +139,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
             preferredStyle: .alert
         )
         
-        let purchaseAction = UIAlertAction(title: "立即购买", style: .default) { _ in
+        let purchaseAction = UIAlertAction(title: "去解锁", style: .default) { _ in
+            self.showLoading()
             PurchaseManager.shared.requestPurchase { success in
+                self.hideLoading()
                 if success {
                     // Purchase successful, perform the tap action or just let them tap again
                     DispatchQueue.main.async {
@@ -171,6 +174,25 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
             return false
         }
         return true
+    }
+
+    private func showLoading() {
+        if loadingIndicator == nil {
+            loadingIndicator = UIActivityIndicatorView(style: .large)
+            loadingIndicator?.color = .white
+            loadingIndicator?.center = view.center
+            loadingIndicator?.hidesWhenStopped = true
+            view.addSubview(loadingIndicator!)
+        }
+        loadingIndicator?.startAnimating()
+        view.isUserInteractionEnabled = false
+    }
+
+    private func hideLoading() {
+        DispatchQueue.main.async {
+            self.loadingIndicator?.stopAnimating()
+            self.view.isUserInteractionEnabled = true
+        }
     }
 }
 
