@@ -1,7 +1,7 @@
 import UIKit
 import AudioToolbox
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UIGestureRecognizerDelegate {
 
     private let fishImageView = UIImageView()
     private let settingsButton = UIButton(type: .system)
@@ -36,15 +36,17 @@ class ViewController: UIViewController {
         fishImageView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(fishImageView)
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        fishImageView.addGestureRecognizer(tapGesture)
-        
         // Settings Button
         settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
         settingsButton.tintColor = .white
         settingsButton.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(settingsButton)
+        
+        // Tap Gesture (Full Screen)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        tapGesture.delegate = self
+        view.addGestureRecognizer(tapGesture)
         
         NSLayoutConstraint.activate([
             fishImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -59,7 +61,7 @@ class ViewController: UIViewController {
         ])
     }
     
-    @objc private func handleTap() {
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         // 1. Check if purchased
         if PurchaseStatusManager.shared.isPurchased() {
              performTapAction()
@@ -92,8 +94,8 @@ class ViewController: UIViewController {
         feedbackGenerator.impactOccurred()
         
         // Sound (System sound for "Tock" or similar)
-        // 1519 is a rigid feedback sound, 1104 is Tock
-        AudioServicesPlaySystemSound(1519) 
+        // Sound
+        AudioManager.shared.playCurrentSound() 
         
         // Floating Text
         showFloatingText()
@@ -160,6 +162,15 @@ class ViewController: UIViewController {
         settingsVC.modalPresentationStyle = .overFullScreen
         settingsVC.view.backgroundColor = UIColor.black.withAlphaComponent(0.9)
         self.present(settingsVC, animated: true, completion: nil)
+    }
+    
+    // UIGestureRecognizerDelegate
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // Don't trigger tap if touching a button (e.g. settings button)
+        if let view = touch.view, view is UIButton {
+            return false
+        }
+        return true
     }
 }
 
