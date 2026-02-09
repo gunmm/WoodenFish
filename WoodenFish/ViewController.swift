@@ -90,14 +90,13 @@ class ViewController: UIViewController {
         label.font = UIFont.boldSystemFont(ofSize: 18)
         label.alpha = 1.0
         
-        // Position: Top right of the fish
-        // We can base it on the fish's frame, but need to convert to view coordinates if fish was nested (it's not).
-        // Let's verify the position.
+        // Position: Top right of the fish, but higher
         let fishFrame = fishImageView.frame
-        let startX = fishFrame.maxX - 50
-        let startY = fishFrame.minY + 50
+        let startX = fishFrame.maxX - 40
+        // Move higher up. Original was minY + 50. Let's try minY - 20 to start above the fish or near top edge.
+        let startY = fishFrame.minY - 20 
         
-        label.frame = CGRect(x: startX, y: startY, width: 200, height: 30) // Arbitrary width
+        label.frame = CGRect(x: startX, y: startY, width: 200, height: 30)
         view.addSubview(label)
         
         // Animation
@@ -111,8 +110,9 @@ class ViewController: UIViewController {
     
     @objc private func openSettings() {
         let settingsVC = SettingsViewController()
-        navigationController?.setNavigationBarHidden(false, animated: true)
-        navigationController?.pushViewController(settingsVC, animated: true)
+        settingsVC.modalPresentationStyle = .overFullScreen
+        settingsVC.view.backgroundColor = UIColor.black.withAlphaComponent(0.9)
+        self.present(settingsVC, animated: true, completion: nil)
     }
 }
 
