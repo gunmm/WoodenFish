@@ -129,9 +129,62 @@ class SettingsViewController: UIViewController, UITextFieldDelegate {
             mainStack.topAnchor.constraint(equalTo: audioLabel.bottomAnchor, constant: 10),
             mainStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             mainStack.widthAnchor.constraint(equalTo: textField.widthAnchor),
-            mainStack.heightAnchor.constraint(equalToConstant: 100)
+            mainStack.heightAnchor.constraint(equalToConstant: 100),
+            
+            // Reset Trial Button: Bottom Left
+            resetTrialButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            resetTrialButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            
+            // Restore Purchase Button: Above Reset Trial Button
+            restoreButton.leadingAnchor.constraint(equalTo: resetTrialButton.leadingAnchor),
+            restoreButton.bottomAnchor.constraint(equalTo: resetTrialButton.topAnchor, constant: -10)
         ])
     }
+    
+    // MARK: - Actions
+    
+    @objc private func restorePurchases() {
+        PurchaseManager.shared.restorePurchases { success in
+            DispatchQueue.main.async {
+                let title = success ? "恢复成功" : "恢复失败"
+                let message = success ? "您的购买已恢复" : "未找到可恢复的购买记录或恢复失败"
+                let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "确定", style: .default))
+                self.present(alert, animated: true)
+            }
+        }
+    }
+    
+    @objc private func resetTrial() {
+        // 重置试用期为当前时间 (即立即过期)
+        PurchaseStatusManager.shared.setTrialExpirationDate(Date())
+        
+        let alert = UIAlertController(title: "已重置", message: "免费试用时间已重置为当前时间 (立即过期)", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
+
+    private lazy var restoreButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("恢复购买", for: .normal)
+        btn.setTitleColor(.lightGray, for: .normal) // Use a subtle color
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
+        btn.addTarget(self, action: #selector(restorePurchases), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(btn)
+        return btn
+    }()
+
+    private lazy var resetTrialButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("放弃免费使用时间，点击付费", for: .normal)
+        btn.setTitleColor(.systemRed, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        btn.addTarget(self, action: #selector(resetTrial), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(btn)
+        return btn
+    }()
     
     @objc private func audioSelected(_ sender: UIButton) {
         let index = sender.tag
